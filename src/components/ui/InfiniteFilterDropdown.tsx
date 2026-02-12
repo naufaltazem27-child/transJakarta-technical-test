@@ -1,4 +1,4 @@
-import React, { useEffect } from "react";
+import React, { useEffect, useRef } from "react";
 import { useInfiniteQuery } from "@tanstack/react-query";
 import { useInView } from "react-intersection-observer";
 import { Check, ChevronDown, Loader2 } from "lucide-react";
@@ -28,6 +28,7 @@ export const InfiniteFilterDropdown: React.FC<InfiniteFilterDropdownProps> = ({
   onChange,
 }) => {
   const [isOpen, setIsOpen] = React.useState(false);
+  const dropdownRef = useRef<HTMLDivElement>(null);
 
   // React Query khusus Infinite Scroll
   const { data, fetchNextPage, hasNextPage, isFetchingNextPage, isLoading } =
@@ -47,6 +48,26 @@ export const InfiniteFilterDropdown: React.FC<InfiniteFilterDropdownProps> = ({
     }
   }, [inView, hasNextPage, fetchNextPage]);
 
+  // Handle klik di luar dropdown untuk menutup
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (
+        dropdownRef.current &&
+        !dropdownRef.current.contains(event.target as Node)
+      ) {
+        setIsOpen(false);
+      }
+    };
+
+    if (isOpen) {
+      document.addEventListener("mousedown", handleClickOutside);
+    }
+
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, [isOpen]);
+
   // Handle klik item (Toggle selection)
   const handleSelect = (id: string) => {
     if (selectedValues.includes(id)) {
@@ -57,7 +78,7 @@ export const InfiniteFilterDropdown: React.FC<InfiniteFilterDropdownProps> = ({
   };
 
   return (
-    <div className="relative">
+    <div className="relative" ref={dropdownRef}>
       {/* Tombol Dropdown */}
       <button
         onClick={() => setIsOpen(!isOpen)}
@@ -76,82 +97,72 @@ export const InfiniteFilterDropdown: React.FC<InfiniteFilterDropdownProps> = ({
 
       {/* Menu Dropdown */}
       {isOpen && (
-        <>
-          <div
-            className="fixed inset-0 z-10"
-            onClick={() => setIsOpen(false)}
-          />
+        <div className="absolute z-20 mt-2 w-72 bg-white border border-gray-200 rounded-xl shadow-xl max-h-80 overflow-y-auto p-2">
+          {isLoading ? (
+            <div className="p-4 text-center text-gray-500 text-xs">
+              Memuat data...
+            </div>
+          ) : (
+            <div className="space-y-1">
+              {data?.pages.map((group, i) => (
+                <React.Fragment key={i}>
+                  {group.data.map((item: any) => {
+                    const opt = mapDataToOption(item);
+                    const isSelected = selectedValues.includes(opt.id);
 
-          <div className="absolute z-20 mt-2 w-72 bg-white border border-gray-200 rounded-xl shadow-xl max-h-80 overflow-y-auto p-2">
-            {isLoading ? (
-              <div className="p-4 text-center text-gray-500 text-xs">
-                Memuat data...
-              </div>
-            ) : (
-              <div className="space-y-1">
-                {data?.pages.map((group, i) => (
-                  <React.Fragment key={i}>
-                    {group.data.map((item: any) => {
-                      const opt = mapDataToOption(item);
-                      const isSelected = selectedValues.includes(opt.id);
-
-                      return (
+                    return (
+                      <div
+                        key={opt.id}
+                        onClick={() => handleSelect(opt.id)}
+                        className={classNames(
+                          "flex items-start gap-3 p-3 rounded-lg cursor-pointer transition-colors text-sm",
+                          isSelected
+                            ? "bg-blue-50 border-blue-100"
+                            : "hover:bg-gray-50",
+                        )}
+                      >
                         <div
-                          key={opt.id}
-                          onClick={() => handleSelect(opt.id)}
                           className={classNames(
-                            "flex items-start gap-3 p-3 rounded-lg cursor-pointer transition-colors text-sm",
+                            "w-4 h-4 mt-0.5 rounded border flex items-center justify-center shrink-0",
                             isSelected
-                              ? "bg-blue-50 border-blue-100"
-                              : "hover:bg-gray-50",
+                              ? "bg-blue-600 border-blue-600 text-white"
+                              : "border-gray-300 bg-white",
                           )}
                         >
-                          <div
-                            className={classNames(
-                              "w-4 h-4 mt-0.5 rounded border flex items-center justify-center shrink-0",
-                              isSelected
-                                ? "bg-blue-600 border-blue-600 text-white"
-                                : "border-gray-300 bg-white",
-                            )}
-                          >
-                            {isSelected && <Check size={12} />}
-                          </div>
-                          <div>
-                            <div className="font-semibold text-gray-900">
-                              {opt.label}
-                            </div>
-                            {opt.subLabel && (
-                              <div className="text-xs text-gray-500 mt-0.5">
-                                {opt.subLabel}
-                              </div>
-                            )}
-                          </div>
+                          {isSelected && <Check size={12} />}
                         </div>
-                      );
-                    })}
-                  </React.Fragment>
-                ))}
+                        <div>
+                          <div className="font-semibold text-gray-900">
+                            {opt.label}
+                          </div>
+                          {opt.subLabel && (
+                            <div className="text-xs text-gray-500 mt-0.5">
+                              {opt.subLabel}
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                    );
+                  })}
+                </React.Fragment>
+              ))}
 
-                {/* Element trigger untuk load more */}
-                <div
-                  ref={ref}
-                  className="py-2 text-center text-xs text-gray-400"
-                >
-                  {isFetchingNextPage ? (
-                    <span className="flex items-center justify-center gap-2">
-                      <Loader2 className="animate-spin" size={14} /> Memuat
-                      lebih banyak...
-                    </span>
-                  ) : hasNextPage ? (
-                    "Scroll untuk memuat lagi"
-                  ) : (
-                    "Semua data termuat"
-                  )}
-                </div>
+              {/* Element trigger untuk load more */}
+              <div ref={ref} className="py-2 text-center text-xs text-gray-400">
+                {isFetchingNextPage ? (
+                  <span className="flex items-center justify-center gap-2">
+                    <Loader2 className="animate-spin" size={14} /> Memuat lebih
+                    banyak...
+                  </span>
+                ) : hasNextPage ? (
+                  "Scroll untuk memuat lagi"
+                ) : (
+                  "Semua data termuat"
+                )}
               </div>
-            )}
-          </div>
-        </>
+            </div>
+          )}
+        </div>
       )}
     </div>
   );

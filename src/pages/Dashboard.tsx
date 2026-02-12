@@ -299,7 +299,101 @@ export const Dashboard = () => {
         </div>
       ) : (
         <>
-          {/* STATE: DATA EMPTY */}
+          {/* Filter & Search Controls - Selalu tampil */}
+          <div className="bg-white rounded-2xl p-6 mb-6">
+            <div className="flex flex-col lg:flex-row gap-3 items-stretch lg:items-center">
+              {/* SEARCH INPUT */}
+              <div className="relative flex-1 min-w-0">
+                <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
+                  <Search size={18} className="text-gray-400" />
+                </div>
+                <input
+                  type="text"
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                  placeholder="Cari ID Bus"
+                  className="block w-full pl-11 pr-4 py-2.5 border border-gray-200 rounded-lg bg-white text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-[#06367C]/10 focus:border-[#06367C] text-sm transition-all"
+                />
+              </div>
+
+              {/* Divider */}
+              <div className="hidden lg:block w-px bg-gray-200 h-10 mx-1"></div>
+
+              {/* FILTER RUTE */}
+              <div className="lg:w-auto">
+                <InfiniteFilterDropdown
+                  label="Rute"
+                  queryKey={["routes"]}
+                  fetchFn={getRoutes}
+                  selectedValues={selectedRoutes}
+                  onChange={(vals) => {
+                    setSelectedRoutes(vals);
+                    setSelectedTrips([]); // Reset trip saat rute berubah agar data valid
+                  }}
+                  mapDataToOption={(item: Route) => ({
+                    id: item.id,
+                    label: item.attributes.short_name,
+                    subLabel: item.attributes.long_name,
+                  })}
+                />
+              </div>
+
+              {/* FILTER TRIP (Dependent on Route) */}
+              <div className="lg:w-auto relative">
+                <div
+                  className={
+                    selectedRoutes.length === 0
+                      ? "opacity-50 pointer-events-none"
+                      : ""
+                  }
+                >
+                  <InfiniteFilterDropdown
+                    label="Trip"
+                    queryKey={["trips", ...selectedRoutes]}
+                    fetchFn={(pageParam) => getTrips(pageParam, selectedRoutes)}
+                    selectedValues={selectedTrips}
+                    onChange={setSelectedTrips}
+                    mapDataToOption={(item: Trip) => ({
+                      id: item.id,
+                      label: item.attributes.headsign,
+                      subLabel: `ID: ${item.id}`,
+                    })}
+                  />
+                </div>
+
+                {/* Tooltip UX */}
+                {selectedRoutes.length === 0 && (
+                  <div className="absolute inset-0 z-10 flex items-center justify-center group cursor-not-allowed">
+                    <div className="hidden group-hover:block absolute bottom-full mb-2 bg-gray-800 text-white text-xs px-3 py-1.5 rounded-lg shadow-lg whitespace-nowrap">
+                      Pilih Rute terlebih dahulu
+                      <div className="absolute top-full left-1/2 -translate-x-1/2 -mt-1 w-0 h-0 border-4 border-transparent border-t-gray-800"></div>
+                    </div>
+                  </div>
+                )}
+              </div>
+
+              {/* RESET BUTTON */}
+              {(selectedRoutes.length > 0 ||
+                selectedTrips.length > 0 ||
+                searchTerm) && (
+                <button
+                  onClick={() => {
+                    setSelectedRoutes([]);
+                    setSelectedTrips([]);
+                    setSearchTerm("");
+                    setPage(0);
+                  }}
+                  className="lg:w-auto px-4 py-2.5 text-sm font-medium text-red-600 hover:text-red-700 hover:bg-red-50 rounded-lg transition-all border border-red-200 flex items-center justify-center gap-2"
+                  title="Reset Semua Filter"
+                >
+                  <FilterX size={18} />
+                  <span className="hidden sm:inline">Reset Filter</span>
+                </button>
+              )}
+            </div>
+          </div>
+
+          {/* Conditional Content: Empty State vs Data Grid */}
           {data?.data.length === 0 ? (
             <div className="min-h-[500px] flex flex-col items-center justify-center bg-white rounded-2xl border-2 border-dashed border-gray-300">
               <div className="bg-gray-100 p-5 rounded-2xl mb-4 border border-gray-200">
@@ -324,102 +418,7 @@ export const Dashboard = () => {
               </button>
             </div>
           ) : (
-            // STATE: DATA SUCCESS
             <div className="bg-white rounded-2xl p-6">
-              {/* Filter & Search Controls */}
-              <div className="flex flex-col lg:flex-row gap-3 items-stretch lg:items-center mb-12">
-                {/* SEARCH INPUT */}
-                <div className="relative flex-1 min-w-0">
-                  <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
-                    <Search size={18} className="text-gray-400" />
-                  </div>
-                  <input
-                    type="text"
-                    value={searchTerm}
-                    onChange={(e) => setSearchTerm(e.target.value)}
-                    placeholder="Cari ID Bus"
-                    className="block w-full pl-11 pr-4 py-2.5 border border-gray-200 rounded-lg bg-white text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-[#06367C]/10 focus:border-[#06367C] text-sm transition-all"
-                  />
-                </div>
-
-                {/* Divider */}
-                <div className="hidden lg:block w-px bg-gray-200 h-10 mx-1"></div>
-
-                {/* FILTER RUTE */}
-                <div className="lg:w-auto">
-                  <InfiniteFilterDropdown
-                    label="Rute"
-                    queryKey={["routes"]}
-                    fetchFn={getRoutes}
-                    selectedValues={selectedRoutes}
-                    onChange={(vals) => {
-                      setSelectedRoutes(vals);
-                      setSelectedTrips([]); // Reset trip saat rute berubah agar data valid
-                    }}
-                    mapDataToOption={(item: Route) => ({
-                      id: item.id,
-                      label: item.attributes.short_name,
-                      subLabel: item.attributes.long_name,
-                    })}
-                  />
-                </div>
-
-                {/* FILTER TRIP (Dependent on Route) */}
-                <div className="lg:w-auto relative">
-                  <div
-                    className={
-                      selectedRoutes.length === 0
-                        ? "opacity-50 pointer-events-none"
-                        : ""
-                    }
-                  >
-                    <InfiniteFilterDropdown
-                      label="Trip"
-                      queryKey={["trips", ...selectedRoutes]}
-                      fetchFn={(pageParam) =>
-                        getTrips(pageParam, selectedRoutes)
-                      }
-                      selectedValues={selectedTrips}
-                      onChange={setSelectedTrips}
-                      mapDataToOption={(item: Trip) => ({
-                        id: item.id,
-                        label: item.attributes.headsign,
-                        subLabel: `ID: ${item.id}`,
-                      })}
-                    />
-                  </div>
-
-                  {/* Tooltip UX */}
-                  {selectedRoutes.length === 0 && (
-                    <div className="absolute inset-0 z-10 flex items-center justify-center group cursor-not-allowed">
-                      <div className="hidden group-hover:block absolute bottom-full mb-2 bg-gray-800 text-white text-xs px-3 py-1.5 rounded-lg shadow-lg whitespace-nowrap">
-                        Pilih Rute terlebih dahulu
-                        <div className="absolute top-full left-1/2 -translate-x-1/2 -mt-1 w-0 h-0 border-4 border-transparent border-t-gray-800"></div>
-                      </div>
-                    </div>
-                  )}
-                </div>
-
-                {/* RESET BUTTON */}
-                {(selectedRoutes.length > 0 ||
-                  selectedTrips.length > 0 ||
-                  searchTerm) && (
-                  <button
-                    onClick={() => {
-                      setSelectedRoutes([]);
-                      setSelectedTrips([]);
-                      setSearchTerm("");
-                      setPage(0);
-                    }}
-                    className="lg:w-auto px-4 py-2.5 text-sm font-medium text-red-600 hover:text-red-700 hover:bg-red-50 rounded-lg transition-all border border-red-200 flex items-center justify-center gap-2"
-                    title="Reset Semua Filter"
-                  >
-                    <FilterX size={18} />
-                    <span className="hidden sm:inline">Reset Filter</span>
-                  </button>
-                )}
-              </div>
-
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5">
                 {data?.data.map((vehicle) => (
                   <VehicleCard
