@@ -1,73 +1,125 @@
-# React + TypeScript + Vite
+# 🚌 Transjakarta Fleet Management System
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+> **Frontend Engineer Technical Test Submission**
+> Sebuah dashboard pemantauan armada realtime yang dibangun dengan **React**, **TypeScript**, dan **Tailwind CSS**, terintegrasi dengan Open API MBTA.
 
-Currently, two official plugins are available:
+![alt text](image.png)
+![alt text](image-1.png)
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Babel](https://babeljs.io/) (or [oxc](https://oxc.rs) when used in [rolldown-vite](https://vite.dev/guide/rolldown)) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+---
 
-## React Compiler
+## 🌟 Fitur Unggulan
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+Aplikasi ini dirancang untuk memenuhi kebutuhan monitoring operasional dengan fokus pada performa dan pengalaman pengguna (UX).
 
-## Expanding the ESLint configuration
+### 1. Monitoring Realtime 📡
 
-If you are developing a production application, we recommend updating the configuration to enable type-aware lint rules:
+- **Auto-Refetching:** Data armada diperbarui otomatis setiap 10 detik tanpa reload halaman.
+- **Live Status Indicators:** Visualisasi status (In Transit, Stopped) dengan kode warna yang intuitif.
 
-```js
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
+### 2. Advanced Filtering & Search 🔍
 
-      // Remove tseslint.configs.recommended and replace with this
-      tseslint.configs.recommendedTypeChecked,
-      // Alternatively, use this for stricter rules
-      tseslint.configs.strictTypeChecked,
-      // Optionally, add this for stylistic rules
-      tseslint.configs.stylisticTypeChecked,
+- **Smart Filtering:** Filter armada berdasarkan **Rute** dan **Trip** secara spesifik.
+- **Dependent Dropdown:** Dropdown Trip hanya menampilkan data yang relevan dengan Rute yang dipilih (mencegah user memilih kombinasi invalid).
+- **Infinite Scroll Dropdown:** Menangani ribuan data rute/trip dengan teknik _lazy loading_ agar aplikasi tetap ringan.
+- **Instant Search:** Pencarian armada berdasarkan ID Bus dengan fitur _debounce_ (mengurangi beban request ke server).
 
-      // Other configs...
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
+### 3. Peta Interaktif (Bonus Feature) 🗺️
+
+- **Detail Lokasi:** Popup modal dilengkapi peta mini untuk melihat posisi spesifik satu armada.
+- **Fullscreen Live Map:** Halaman khusus untuk memantau sebaran seluruh armada dalam satu peta besar interaktif.
+
+---
+
+## 🛠️ Teknologi & Tools
+
+Project ini dibangun menggunakan modern stack untuk menjamin skalabilitas dan _developer experience_ yang baik.
+
+| Kategori             | Teknologi                                                    | Alasan Pemilihan                                                                                        |
+| :------------------- | :----------------------------------------------------------- | :------------------------------------------------------------------------------------------------------ |
+| **Core**             | [React 18](https://react.dev/) + [Vite](https://vitejs.dev/) | Performa build cepat dan ekosistem matang.                                                              |
+| **Language**         | [TypeScript](https://www.typescriptlang.org/)                | Type safety untuk mencegah runtime error dan meningkatkan maintainability.                              |
+| **Styling**          | [Tailwind CSS](https://tailwindcss.com/)                     | Styling cepat, konsisten, dan file size CSS yang kecil di production.                                   |
+| **State Management** | [TanStack Query (React Query)](https://tanstack.com/query)   | Mengelola server state (caching, loading, error, polling) jauh lebih efisien daripada useEffect manual. |
+| **Mapping**          | [React Leaflet](https://react-leaflet.js.org/)               | Ringan, open-source, dan mudah dikustomisasi dibanding Google Maps.                                     |
+| **Icons**            | [Lucide React](https://lucide.dev/)                          | Set ikon yang bersih, modern, dan ringan.                                                               |
+
+---
+
+## 📂 Struktur Project (Clean Architecture)
+
+Menggunakan pendekatan **Feature-based** yang modular agar mudah dikembangkan.
+
+```bash
+transJakarta-technical-test/
+├── public/                # Static assets
+│   └── images/            # Image files
+├── src/
+│   ├── assets/            # App assets (images, fonts, etc)
+│   ├── components/        # Reusable UI components
+│   │   ├── layout/        # Layout wrapper (MainLayout)
+│   │   └── ui/            # Atomic components (Modal, Badge, Dropdown, Card)
+│   ├── features/          # Feature-specific components (Map, Sidebar)
+│   ├── hooks/             # Custom hooks (useDebounce)
+│   ├── pages/             # Halaman utama (Dashboard, LiveMap)
+│   ├── services/          # API integration logic (Axios setup)
+│   ├── types/             # TypeScript interfaces (Vehicle, Route, Trip)
+│   ├── utils/             # Utility functions
+│   ├── App.tsx            # Routing & Provider setup
+│   ├── main.tsx           # Application entry point
+│   └── index.css          # Global styles
+├── index.html             # HTML template
+├── package.json           # Dependencies & scripts
+├── vite.config.ts         # Vite configuration
+├── tsconfig.json          # TypeScript configuration
+├── tsconfig.app.json      # App-specific TypeScript config
+├── tsconfig.node.json     # Node-specific TypeScript config
+├── eslint.config.js       # ESLint configuration
+└── README.md              # Project documentation
 ```
 
-You can also install [eslint-plugin-react-x](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-x) and [eslint-plugin-react-dom](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-dom) for React-specific lint rules:
+---
 
-```js
-// eslint.config.js
-import reactX from 'eslint-plugin-react-x'
-import reactDom from 'eslint-plugin-react-dom'
+## 🚀 Cara Menjalankan Aplikasi
 
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-      // Enable lint rules for React
-      reactX.configs['recommended-typescript'],
-      // Enable lint rules for React DOM
-      reactDom.configs.recommended,
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
+### Prerequisites
+
+Pastikan Anda sudah menginstall:
+
+- **Node.js** (versi 16 atau lebih tinggi)
+- **npm** atau **yarn** atau **pnpm**
+
+### Langkah-langkah
+
+1. **Clone repository**
+
+   ```bash
+   git clone <repository-url>
+   cd transJakarta-technical-test
+   ```
+
+2. **Install dependencies**
+
+   ```bash
+   npm install
+   ```
+
+3. **Jalankan aplikasi dalam mode development**
+
+   ```bash
+   npm run dev
+   ```
+
+4. **Buka browser** dan akses:
+   ```
+   http://localhost:5173
+   ```
+
+### Scripts Tersedia
+
+```bash
+npm run dev        # Menjalankan development server dengan Vite
+npm run build      # Build aplikasi untuk production
+npm run preview    # Preview production build secara lokal
+npm run lint       # Menjalankan ESLint untuk code quality check
 ```
